@@ -1,4 +1,6 @@
 from chunker.base import Chunker
+from models.document import Document
+from models.chunk import Chunk
 
 
 class FixedChunker(Chunker):
@@ -16,15 +18,30 @@ class FixedChunker(Chunker):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-    def chunk(self, text: str) -> list[str]:
+    def chunk(self, document: Document) -> list[Chunk]:
 
-        start = 0
         stride = self.chunk_size - self.chunk_overlap
-        chunks = []
 
-        while start < len(text):
-            chunk = text[start : start + self.chunk_size]
-            chunks.append(chunk)
-            start += stride
+        chunks: list[Chunk] = []
+
+        chunk_index = 1
+
+        for page in document.pages:
+            start = 0
+
+            while start < len(page.text):
+                chunk_text = page.text[start : start + self.chunk_size]
+
+                chunk = Chunk(
+                    chunk_id=str(chunk_index)+"_"+document.document_id,
+                    document_id=document.document_id,
+                    page_number=page.number,
+                    chunk_text=chunk_text,
+                )
+
+                chunks.append(chunk)
+
+                chunk_index += 1
+                start += stride
 
         return chunks
